@@ -22,9 +22,11 @@ pipeline{
                   usernameVariable: 'DOCKERHUB_USER',
                   passwordVariable: 'DOCKERHUB_TOKEN'
                 )]){
+                    sh '''
                     set +x
                     echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
                     docker push rachhit/node-app-mss:2
+                    '''
                    }
              }
         }

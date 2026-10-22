@@ -1,0 +1,50 @@
+pipeline{
+    agent any;
+
+    stages{
+        stage('checkout code'){
+            steps{
+               git branch:'main',  url:'https://github.com/shekharassrm/nodejs-app-mss.git', credentialsId:'github-private-creds'
+              }
+        }
+
+        
+        stage('build docker image'){
+           steps{
+                sh 'docker build -t rachhit/node-app-mss:2 .'
+            }
+        }
+        
+        stage('push to dockerhub'){
+             steps{
+                withCredentials([usernamePassword(
+                  credentialsId: 'dockerhub-creds',
+                  usernameVariable: 'DOCKERHUB_USER',
+                  passwordVariable: 'DOCKERHUB_TOKEN'
+                )]){
+                    set +x
+                    echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
+                    docker push rachhit/node-app-mss:2
+                   }
+             }
+        }
+        
+        stage('deploy to server'){
+            steps{
+                sshagent(credentials: ['deploy-server-ssh']){
+                    sh '''
+                          ssh -o StrictHostKeyChecking=accept-new ubuntu@3.111.57.55 '
+                          docker pull rachhit/node-app-mss:2 &&
+                          (docker stop node-app 2>/dev/null || true) &&
+                          (docker rm node-app 2>/dev/null || true) &&
+                          docker run -d --name node-app --restart unless-stopped \
+                          -p 9981:9981 rachhit/node-app-mss:2 
+                          '
+                       '''
+                }
+            }
+        }
+        
+        
+    }
+}

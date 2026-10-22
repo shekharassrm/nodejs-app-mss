@@ -4,7 +4,7 @@ pipeline{
     stages{
         stage('checkout code'){
             steps{
-               git branch:'main',  url:'https://github.com/shekharassrm/nodejs-app-mss.git', credentialsId:'github-private-creds'
+               git branch:'master',  url:'https://github.com/shekharassrm/nodejs-app-mss.git', credentialsId:'github-private-creds'
               }
         }
 
